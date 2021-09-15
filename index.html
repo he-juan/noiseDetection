@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>test</title>
+	<style>
+		section#center {
+			margin: auto;
+			height: 1000px;
+		}
+		canvas#whiteboard {
+			margin: auto;
+			display: block;
+			/* background: skyblue; */
+		}
+		#start {
+			background: deepskyblue;
+		}
+	</style>
+	<script src="vudio.js"></script>
+</head>
+<body>
+	<section id="center">
+		<button id="start">start</button>
+		<button id="stop" disabled>stop</button>
+		<canvas id="canvas"></canvas>
+		<!--<canvas id="whiteboard" width="500" height="500"></canvas>-->
+	</section>
+	<script>
+		// window.addEventListener("load", function (e) {
+        	// // 开源图形化, 无噪音检测
+        	// var canvas = document.querySelector('#canvas')
+        	// navigator.mediaDevices.getUserMedia({
+        	// 	audio: true
+		// 	}).then(function (stream) {
+		// 		// 调用Vudio
+		// 		var vudio = new Vudio(stream, canvas, {
+		// 			accuracy: 256,
+		// 			width: 1024,
+		// 			height: 200,
+		// 			waveform: {
+		// 				fadeSide: false,
+		// 				maxHeight: 200,
+		// 				verticalAlign: 'middle',
+		// 				horizontalAlign: 'center',
+		// 				color: '#2980b9'
+		// 			}
+		// 		})
+		// 		vudio.dance()
+		// 	})
+		// })
+	</script>
+</body>
+
+<head>
+	<script src="index.js"></script>
+	<script src="handle.js"></script>
+</head>
+
+</html>
