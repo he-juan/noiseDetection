@@ -21,14 +21,13 @@ let __spreadArray = (this && this.__spreadArray) || function (to, from) {
         // @ts-ignore
         var rnnoiseModule = rnnoiseWasmInit();
         rnnoiseModule.then(function (mod) {
-            console.warn("mod:",mod)
             rnnoiseProcessor = mod;
             wasmPcmInput = rnnoiseProcessor._malloc(rnnoiseBufferSize);
             wasmPcmOutput = rnnoiseProcessor._malloc(rnnoiseBufferSize);
             context = rnnoiseProcessor._rnnoise_create();
             wasmPcmInputF32Index = wasmPcmInput / 4;
             // console.log(rnnoiseModule);
-            console.log("山寨头文件:", rnnoiseProcessor);
+            console.log("获取文件:", rnnoiseProcessor);
             if (!wasmPcmInput) {
                 console.log("Failed to create wasm input memory buffer!");
             }
@@ -55,6 +54,7 @@ let audioStream
 let canvas = document.getElementById("canvas")
 let start = document.getElementById("start")
 let stop = document.getElementById("stop")
+// let text = document.getElementsByTagName('texarea')[0]
 start.onclick = requireMicrophone
 stop.onclick = stopStream
 let param = {
@@ -93,7 +93,7 @@ function requireMicrophone() {
     navigator.mediaDevices.getUserMedia({ audio: true, video: false })
         .then(function (stream) {
             audioStream = stream
-            console.log("开始读取麦克风...");
+            log("开始读取麦克风...");
             setTimeout(listenMicrophone, 500, stream);
 
              // 开源图形化, 无噪音检测
@@ -131,7 +131,7 @@ function listenMicrophone(stream) {
         // @ts-ignore
         bufferResidue = completeInData.slice(i, completeInData.length);
     });
-    console.log("麦克风连接成功");
+   log("麦克风连接成功");
 }
 
  /**
@@ -211,9 +211,10 @@ function calculateNoisyScore() {
     let audioLevelAvg = calculateAverage(audioLvlArray);
     if (scoreAvg < vadNoiseAvgThreshold && audioLevelAvg > noisyAudioLevelThreshold) {
         console.warn("请注意，已经存在噪音");
+        log("请注意，已经存在噪音")
     }
     reset();
-    console.log("分数:", scoreAvg, audioLevelAvg);
+    console.log("分数:" +  scoreAvg, audioLevelAvg);
 }
 function processVADScore(score, pcmData) {
     let posAudioLevels = filterPositiveValues(pcmData);
@@ -237,6 +238,7 @@ function processVADScore(score, pcmData) {
 function stopStream(){
     try {
         stop.disabled = true
+        document.querySelector('textarea').value = null
         let tracks = audioStream.getTracks()
         for (let track in tracks) {
             tracks[track].onended = null
@@ -246,4 +248,8 @@ function stopStream(){
     } catch (e) {
         console.error(e)
     }
+}
+
+function log(value){
+    document.querySelector('textarea').value += value + '\n'
 }
