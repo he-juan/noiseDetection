@@ -62,34 +62,43 @@ let audioOutputSelect = document.querySelector('select#audioOutput');
 // let selectors = [audioInputSelect, audioOutputSelect]
 // audioInputSelect.onclick = getDeviced
 audioInputSelect.onchange = changeDeviced
+// audioInputSelect.onchange = getDeviced
+
 start.onclick = requireMicrophone
 stop.onclick = stopStream
 
 
 navigator.mediaDevices.enumerateDevices().then(getDeviced).catch(function(err){console.warn("获取不到设备："+ err.message)})
 
+
+
+
 function changeDeviced(){
-    audioInputSelect = audioInputSelect[audioInputSelect.selectedIndex]
-    console.warn("audioInputSelect:",audioInputSelect)
-    log("设备修改为：" + audioInputSelect.text)
-    requireMicrophone()
+    if(audioStream){
+        stopStream()
+    }
+    let option = document.querySelector('select#audioSource').options
+    option = option[option.selectedIndex]
+    console.warn("audioInputSelect:",option)
 }
 function getDeviced(deviceInfos){
     console.warn("deviced:",deviceInfos)
-    for(let i = 0; i !== deviceInfos.length; i++){
-        let deviceInfo = deviceInfos[i]
-        option = document.createElement('option')
-        if (deviceInfo.kind === 'audioinput') {
-            option.text = deviceInfo.label || `microphone ${audioInputSelect.length + 1}`;
-            audioInputSelect.appendChild(option);
-            console.warn("text:"+ option.text)
-        } else if (deviceInfo.kind === 'audiooutput') {
-            // option.text = deviceInfo.label || `speaker ${audioOutputSelect.length + 1}`;
-            // audioOutputSelect.appendChild(option);
-        } else {
-            console.log('Some other kind of source/device: ', deviceInfo);
+    if(deviceInfos.length > 1){
+        for(let i = 0; i !== deviceInfos.length; i++){
+            let deviceInfo = deviceInfos[i]
+            option = document.createElement('option')
+            if (deviceInfo.kind === 'audioinput') {
+                option.text = deviceInfo.label || `microphone ${audioInputSelect.length + 1}`;
+                audioInputSelect.appendChild(option);
+                console.warn("text:"+ option.text)
+            } else if (deviceInfo.kind === 'audiooutput') {
+                // option.text = deviceInfo.label || `speaker ${audioOutputSelect.length + 1}`;
+                // audioOutputSelect.appendChild(option);
+            } else {
+                console.log('Some other kind of source/device: ', deviceInfo);
+            }
+            option.value = deviceInfo.deviceId
         }
-        option.value = deviceInfo.deviceId
     }
 }
 
@@ -126,7 +135,10 @@ let processTimeFrameSpanMs = 1500
 function requireMicrophone() {
     // 开始读取麦克风
     stop.disabled = false
-    console.warn("constraints:",audioInputSelect.value)
+    let option = document.querySelector('select#audioSource').options
+    log("设备为：" + option[option.selectedIndex].text)
+    console.log("设备为：" + option[option.selectedIndex].text)
+
     navigator.mediaDevices.getUserMedia({ audio: audioInputSelect.value, video: false })
         .then(function (stream) {
             audioStream = stream
@@ -277,6 +289,7 @@ function processVADScore(score, pcmData) {
 function stopStream(){
     try {
         stop.disabled = true
+        // start.disabled = false
         document.querySelector('textarea').value = null
         let tracks = audioStream.getTracks()
         for (let track in tracks) {
