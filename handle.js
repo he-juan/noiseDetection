@@ -109,8 +109,8 @@ function listenMicrophone(stream) {
     let bufferResidue = new Float32Array([]);
     let scriptProcessor;
     let AudioContextImpl = window.AudioContext || window.webkitAudioContext;
-    // var audioContext = new AudioContextImpl({sampleRate: PCM_FREQUENCY});   // ? 指定参数 Firefox 报错
-    let audioContext = new AudioContextImpl({});
+    let audioContext = new AudioContextImpl({sampleRate: PCM_FREQUENCY});   // ? 指定参数 Firefox 报错
+    // let audioContext = new AudioContextImpl({});
     mediaStreamSource = audioContext.createMediaStreamSource(stream);
     scriptProcessor = audioContext.createScriptProcessor(vadEmitterSampleRate, 1, 1);
     mediaStreamSource.connect(scriptProcessor);
