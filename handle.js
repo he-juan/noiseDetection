@@ -28,6 +28,9 @@ let __spreadArray = (this && this.__spreadArray) || function (to, from) {
             wasmPcmInputF32Index = wasmPcmInput / 4;
             // console.log(rnnoiseModule);
             console.log("获取文件:", rnnoiseProcessor);
+            console.warn("wasmPcmInput:",wasmPcmInput)
+            console.warn("wasmPcmOutput:",wasmPcmOutput)
+            console.warn("context:",context)
             if (!wasmPcmInput) {
                 console.log("Failed to create wasm input memory buffer!");
             }
@@ -37,7 +40,6 @@ let __spreadArray = (this && this.__spreadArray) || function (to, from) {
         });
     });
 }());
-
 
 let context;                   // Rnnoise context object needed to perform the audio processing.
 let wasmPcmInput;              // WASM dynamic memory buffer used as input for rnnoise processing method.
@@ -54,9 +56,35 @@ let audioStream
 let canvas = document.getElementById("canvas")
 let start = document.getElementById("start")
 let stop = document.getElementById("stop")
-// let text = document.getElementsByTagName('texarea')[0]
+let audioInputSelect = document.querySelector('select#audioSource');
+let audioOutputSelect = document.querySelector('select#audioOutput');
+// let selectors = [audioInputSelect, audioOutputSelect]
+audioInputSelect.onchange = getDeviced
 start.onclick = requireMicrophone
 stop.onclick = stopStream
+
+navigator.mediaDevices.enumerateDevices().then(getDeviced).catch(function(err){console.warn("获取不到设备："+ err.message)})
+
+function getDeviced(deviceInfos){
+    console.warn("deviced:",deviceInfos)
+    for(let i = 0; i !== deviceInfos.length; i++){
+        let deviceInfo = deviceInfos[i]
+        let option = document.createElement('option')
+        option.value = deviceInfo.deviceId
+
+        if (deviceInfo.kind === 'audioinput') {
+            option.text = deviceInfo.label || `microphone ${audioInputSelect.length + 1}`;
+            audioInputSelect.appendChild(option);
+            console.warn("text:"+option.text)
+        } else if (deviceInfo.kind === 'audiooutput') {
+            // option.text = deviceInfo.label || `speaker ${audioOutputSelect.length + 1}`;
+            // audioOutputSelect.appendChild(option);
+        } else {
+            console.log('Some other kind of source/device: ', deviceInfo);
+        }
+    }
+}
+
 let param = {
     accuracy: 256,
     width: 1024,
@@ -90,7 +118,8 @@ let processTimeFrameSpanMs = 1500
 function requireMicrophone() {
     // 开始读取麦克风
     stop.disabled = false
-    navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+    console.warn("constraints:",audioInputSelect.value)
+    navigator.mediaDevices.getUserMedia({ audio: audioInputSelect.value, video: false })
         .then(function (stream) {
             audioStream = stream
             log("开始读取麦克风...");
@@ -210,6 +239,8 @@ function calculateNoisyScore() {
     let scoreAvg = calculateAverage(scoreArray);
     let audioLevelAvg = calculateAverage(audioLvlArray);
     if (scoreAvg < vadNoiseAvgThreshold && audioLevelAvg > noisyAudioLevelThreshold) {
+        log("scoreAvg:" + scoreAvg)
+        log("audioLevelAvg:" + audioLevelAvg)
         console.warn("请注意，已经存在噪音");
         log("请注意，已经存在噪音")
     }
