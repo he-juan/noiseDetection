@@ -13,6 +13,34 @@ let __spreadArray = (this && this.__spreadArray) || function (to, from) {
 
 
 /**
+ *  lib-jitsi-meet/modules/detection/VADNoiseDetection.js
+ *  Constant. Rnnoise only takes operates on 44.1Khz float 32 little endian PCM.
+ */
+// const PCM_FREQUENCY: number = 44100;
+let PCM_FREQUENCY = 18000;                           // 18K ?
+let rnnoiseSampleLength = 480 ;                      // Constant. Rnnoise default sample size, samples of different size won't work.
+let vadEmitterSampleRate = 4096;                     // Sample rate of TrackVADEmitter, it defines how many audio samples are processed at a time.
+let rnnoiseBufferSize = rnnoiseSampleLength * 4;     // Constant. Rnnoise only takes inputs of 480 PCM float32 samples thus 480*4.
+
+let vadScoreTrigger = 0.2;                           // The value that a VAD score needs to be under in order for processing to begin. ? 没复制错
+let audioLevelScoreTrigger = 0.020;                  // The value that a VAD score needs to be under in order for processing to begin. ? 一样的注释
+let vadNoiseAvgThreshold = 0.2;                      // The average value VAD needs to be under over a period of time to be considered noise.
+let noisyAudioLevelThreshold = 0.040;                // The average values that audio input need to be over to be considered loud.
+let processTimeFrameSpanMs = 1500;
+let param = {
+    accuracy: 256,
+    width: 1024,
+    height: 200,
+    waveform: {
+        fadeSide: false,
+        maxHeight: 200,
+        verticalAlign: 'middle',
+        horizontalAlign: 'center',
+        color: '#2980b9'
+    }
+}
+
+/**
  * load wasm
  * Creates a new instance of RnnoiseProcessor.
  */
@@ -20,13 +48,14 @@ let __spreadArray = (this && this.__spreadArray) || function (to, from) {
     window.addEventListener("load", function (e) {
         // @ts-ignore
         var rnnoiseModule = rnnoiseWasmInit();
+        console.warn("rnnoiseModule:",rnnoiseModule)
         rnnoiseModule.then(function (mod) {
+            console.warn("mod:",mod)
             rnnoiseProcessor = mod;
             wasmPcmInput = rnnoiseProcessor._malloc(rnnoiseBufferSize);
             wasmPcmOutput = rnnoiseProcessor._malloc(rnnoiseBufferSize);
             context = rnnoiseProcessor._rnnoise_create();
             wasmPcmInputF32Index = wasmPcmInput / 4;
-            // console.log(rnnoiseModule);
             console.log("获取文件:", rnnoiseProcessor);
             console.warn("wasmPcmInput:",wasmPcmInput)
             console.warn("wasmPcmOutput:",wasmPcmOutput)
@@ -51,28 +80,53 @@ let processing;
 let scoreArray = [];
 let audioLvlArray = [];
 let processTimeout;
+let scriptProcessor;
+let gainNode;
+let audioContext;
 
 let audioStream
+let option
 let canvas = document.getElementById("canvas")
 let start = document.getElementById("start")
 let stop = document.getElementById("stop")
+let mute = document.querySelector(".mute")
+let add = document.querySelector('.add')  //音量+
+let lost = document.querySelector('.lost') //音量-
 let audioInputSelect = document.querySelector('select#audioSource');
-let option
 let audioOutputSelect = document.querySelector('select#audioOutput');
 // let selectors = [audioInputSelect, audioOutputSelect]
-// audioInputSelect.onclick = getDeviced
-audioInputSelect.onchange = changeDeviced
-// audioInputSelect.onchange = getDeviced
 
+
+audioInputSelect.onchange = changeDeviced
 start.onclick = requireMicrophone
 stop.onclick = stopStream
+//修改音量大小
+// mute.onclick = function () {
+//     if(mute.value== "Mute") {
+//         // 0 means mute. If you still hear something, make sure you haven't
+//         // connected your source into the output in addition to using the GainNode.
+//         gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+//         mute.innerText = "Unmute";
+//         mute.value = "Unmute";
+//         log("改变音量为："+ gainNode.gain.value)
+//     } else {
+//         gainNode.gain.setValueAtTime(1, audioContext.currentTime);
+//         mute.innerText = "Mute";
+//         mute.value = "Mute"
+//         log("改变音量为："+ gainNode.gain.value)
+//     }
+// }
+// add.onclick = function(){
+//     gainNode.gain.value += 0.1;
+//     log("音量为："+ gainNode.gain.value)
+// };
+// lost.onclick = function(){
+//     gainNode.gain.value -= 0.1;
+//     log("音量为："+ gainNode.gain.value)
+// }
 
 
 navigator.mediaDevices.enumerateDevices().then(getDeviced).catch(function(err){console.warn("获取不到设备："+ err.message)})
-
-
-
-
 function changeDeviced(){
     if(audioStream){
         stopStream()
@@ -102,36 +156,6 @@ function getDeviced(deviceInfos){
     }
 }
 
-let param = {
-    accuracy: 256,
-    width: 1024,
-    height: 200,
-    waveform: {
-        fadeSide: false,
-        maxHeight: 200,
-        verticalAlign: 'middle',
-        horizontalAlign: 'center',
-        color: '#2980b9'
-    }
-}
-
-
-/**
- *  lib-jitsi-meet/modules/detection/VADNoiseDetection.js
- *  Constant. Rnnoise only takes operates on 44.1Khz float 32 little endian PCM.
- */
-// const PCM_FREQUENCY: number = 44100;
-let PCM_FREQUENCY = 18000;                           // 18K ?
-let rnnoiseSampleLength = 480 ;                      // Constant. Rnnoise default sample size, samples of different size won't work.
-let vadEmitterSampleRate = 4096;                     // Sample rate of TrackVADEmitter, it defines how many audio samples are processed at a time.
-let rnnoiseBufferSize = rnnoiseSampleLength * 4;     // Constant. Rnnoise only takes inputs of 480 PCM float32 samples thus 480*4.
-
-let vadScoreTrigger = 0.2;                           // The value that a VAD score needs to be under in order for processing to begin. ? 没复制错
-let audioLevelScoreTrigger = 0.020;                  // The value that a VAD score needs to be under in order for processing to begin. ? 一样的注释
-let vadNoiseAvgThreshold = 0.2;                      // The average value VAD needs to be under over a period of time to be considered noise.
-let noisyAudioLevelThreshold = 0.040;                // The average values that audio input need to be over to be considered loud.
-let processTimeFrameSpanMs = 1500
-
 function requireMicrophone() {
     // 开始读取麦克风
     stop.disabled = false
@@ -146,6 +170,7 @@ function requireMicrophone() {
             setTimeout(listenMicrophone, 500, stream);
 
              // 开源图形化, 无噪音检测
+            log("开始绘制频谱...")
             let vudio = new Vudio(stream,canvas,param)
             vudio.dance()
     }).catch(function(err){
@@ -156,24 +181,27 @@ function requireMicrophone() {
 function listenMicrophone(stream) {
     let mediaStreamSource;
     let bufferResidue = new Float32Array([]);
-    let scriptProcessor;
     let AudioContextImpl = window.AudioContext || window.webkitAudioContext;
-    let audioContext = new AudioContextImpl({sampleRate: PCM_FREQUENCY});   // ? 指定参数 Firefox 报错
+    audioContext = new AudioContextImpl({sampleRate: PCM_FREQUENCY});   // ? 指定参数 Firefox 报错
     // let audioContext = new AudioContextImpl({});
+    gainNode = audioContext.createGain(); //修改value的大小，改变输出大小，默认是1,0表示静音
     mediaStreamSource = audioContext.createMediaStreamSource(stream);
     scriptProcessor = audioContext.createScriptProcessor(vadEmitterSampleRate, 1, 1);
-    mediaStreamSource.connect(scriptProcessor);
+    mediaStreamSource.connect(gainNode);
+    gainNode.connect(scriptProcessor)
     scriptProcessor.connect(audioContext.destination);
     scriptProcessor.addEventListener("audioprocess", function (audioEvent) {
         let inData = audioEvent.inputBuffer.getChannelData(0);
+        // console.warn("inData:",inData)
         // @ts-ignore
         let completeInData = __spreadArray(__spreadArray([], bufferResidue), inData);
+        // console.warn("completeInData:",completeInData)
         let i = 0;
         for ( ; i + rnnoiseSampleLength < completeInData.length; i += rnnoiseSampleLength) {
             let pcmSample = completeInData.slice(i, i + rnnoiseSampleLength);
             let vadScore = calculateAudioFrameVAD(pcmSample.slice());
             if(vadScore != 0){
-                console.log("audioprocess score:", vadScore);
+                console.warn("audioprocess score:", vadScore);
             }
             processVADScore(vadScore, pcmSample);
         }
@@ -289,7 +317,8 @@ function processVADScore(score, pcmData) {
 function stopStream(){
     try {
         stop.disabled = true
-        // start.disabled = false
+        scriptProcessor.disconnect()
+        scriptProcessor = null
         document.querySelector('textarea').value = null
         let tracks = audioStream.getTracks()
         for (let track in tracks) {
@@ -305,3 +334,4 @@ function stopStream(){
 function log(value){
     document.querySelector('textarea').value += value + '\n'
 }
+
