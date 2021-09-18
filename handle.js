@@ -27,18 +27,7 @@ let audioLevelScoreTrigger = 0.020;                  // The value that a VAD sco
 let vadNoiseAvgThreshold = 0.2;                      // The average value VAD needs to be under over a period of time to be considered noise.
 let noisyAudioLevelThreshold = 0.040;                // The average values that audio input need to be over to be considered loud.
 let processTimeFrameSpanMs = 1500;
-let param = {
-    accuracy: 256,
-    width: 1024,
-    height: 200,
-    waveform: {
-        fadeSide: false,
-        maxHeight: 200,
-        verticalAlign: 'middle',
-        horizontalAlign: 'center',
-        color: '#2980b9'
-    }
-}
+
 
 /**
  * load wasm
@@ -95,6 +84,18 @@ let lost = document.querySelector('.lost') //音量-
 let audioInputSelect = document.querySelector('select#audioSource');
 let audioOutputSelect = document.querySelector('select#audioOutput');
 // let selectors = [audioInputSelect, audioOutputSelect]
+let param = {
+    accuracy: 256,
+    width: 1024,
+    height: 200,
+    waveform: {
+        fadeSide: false,
+        maxHeight: 200,
+        verticalAlign: 'middle',
+        horizontalAlign: 'center',
+        color: '#2980b9'
+    }
+};
 
 
 audioInputSelect.onchange = changeDeviced
