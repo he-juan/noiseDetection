@@ -152,7 +152,7 @@ function getDeviced(deviceInfos){
             } else {
                 console.log('Some other kind of source/device: ', deviceInfo);
             }
-            option.value = deviceInfo.deviceId
+            option.value = deviceInfo.deviceId || deviceInfo.groupId
         }
     }
 }
@@ -170,11 +170,11 @@ function requireMicrophone() {
             log("开始读取麦克风...");
             setTimeout(listenMicrophone, 500, stream);
 
-             // 开源图形化, 无噪音检测
+            // 开源图形化, 无噪音检测
             log("开始绘制频谱...")
             let vudio = new Vudio(stream,canvas,param)
             vudio.dance()
-    }).catch(function(err){
+        }).catch(function(err){
         console.warn("麦克风读取失败：",err)
     })
 }
@@ -209,13 +209,13 @@ function listenMicrophone(stream) {
         // @ts-ignore
         bufferResidue = completeInData.slice(i, completeInData.length);
     });
-   log("麦克风连接成功");
+    log("麦克风连接成功");
 }
 
- /**
-  *  Calculate the Voice Activity Detection for a raw Float32 PCM sample Array.
-  *   The size of the array must be of exactly 480 samples, this constraint comes from the rnnoise library.
-  */
+/**
+ *  Calculate the Voice Activity Detection for a raw Float32 PCM sample Array.
+ *   The size of the array must be of exactly 480 samples, this constraint comes from the rnnoise library.
+ */
 function calculateAudioFrameVAD(pcmFrame) {
     var pcmFrameLength = pcmFrame.length;
     if (pcmFrameLength !== rnnoiseSampleLength) {
