@@ -75,7 +75,7 @@ NoiseDetection.prototype.wasmHandle = async function(rnnoiseModule){
 
 NoiseDetection.prototype.listenMicrophone = function(stream) {
     console.warn("开始检测噪音")
-    log("开始监测噪音")
+    log("开始检测噪音")
     let This = window.noiseDetection;
 
     let bufferResidue = new Float32Array([]);
@@ -83,7 +83,6 @@ NoiseDetection.prototype.listenMicrophone = function(stream) {
     This.audioContext = new  This.AudioContextImpl();
     This.mediaStreamSource = This.audioContext.createMediaStreamSource(stream);
     console.warn("This.audioContext:",This.audioContext)
-    console.warn("This.mediaStreamSource:",This.mediaStreamSource)
     This.scriptProcessor = This.audioContext.createScriptProcessor(This.vadEmitterSampleRate, 1, 1);
     This.mediaStreamSource.connect(This.scriptProcessor);
     This.scriptProcessor.connect(This.audioContext.destination);
@@ -95,9 +94,6 @@ NoiseDetection.prototype.listenMicrophone = function(stream) {
         for ( ; i + This.rnnoiseSampleLength < completeInData.length; i += This.rnnoiseSampleLength) {
             let pcmSample = completeInData.slice(i, i + This.rnnoiseSampleLength);
             let vadScore = This.calculateAudioFrameVAD(pcmSample.slice());
-            if(vadScore != 0){
-                console.log("audioprocess score:", vadScore);
-            }
             This.processVADScore(vadScore, pcmSample);
         }
         // @ts-ignore
@@ -191,7 +187,7 @@ NoiseDetection.prototype.calculateNoisyScore = function() {
         log("请注意，已经存在噪音");
     }
     This.reset();
-    console.log("分数:", scoreAvg, audioLevelAvg);
+    console.log("scoreAvg分数:", scoreAvg + 'audio平均分数：' + audioLevelAvg);
 }
 NoiseDetection.prototype.processVADScore = function(score, pcmData) {
     let  This = window.noiseDetection
