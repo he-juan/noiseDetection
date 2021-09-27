@@ -212,28 +212,32 @@ NoiseDetection.prototype.processVADScore = function(score, pcmData) {
 
 NoiseDetection.prototype.stop = function(){
     let  This = window.noiseDetection
-    This.wasmPcmInput = null;
-    This.wasmPcmOutput = null;
-    This.rnnoiseProcessor = null;
-    This.wasmPcmInputF32Index = null;
+    if (!This.rnnoiseContext) return;
+
+    // This.wasmPcmInput = This.rnnoiseProcessor._malloc(This.rnnoiseBufferSize);
+    // This.wasmPcmInput && This.rnnoiseProcessor._free(This.wasmPcmInput)
+    // This.wasmPcmOutput && This.rnnoiseProcessor._free(This.wasmPcmOutput)
+    // This.rnnoiseProcessor._rnnoise_destroy(This.rnnoiseContext);
+    // This.wasmPcmInput = null;
+    // This.wasmPcmOutput = null;
+    // This.rnnoiseProcessor = null;
+    // This.wasmPcmInputF32Index = null;
     This.processing = false;
-    This.AudioContextImpl = null;
-    if(This.mediaStreamSource || This.scriptProcessor){
-        This.mediaStreamSource.disconnect()
+    if(This.noiseDetectionContext){
+        This.noiseDetectionContext.close()
+        This.noiseDetectionContext = null
+    }
+    if(This.scriptProcessor){
         This.scriptProcessor.disconnect()
-        This.scriptProcessor = null;
-        This.mediaStreamSource= null;
+        This.scriptProcessor= null
     }
     if(This.processTimeout){
         clearTimeout(This.processTimeout)
         This.processTimeout = null;
     }
-    if(This.audioContext){
-        This.audioContext.close()
-        This.audioContext= null
-    }
-    This.rnnoiseContext= null
-    This.rnnoiseModule = null
+    This.mediaStreamSource = null
+    // This.rnnoiseContext= null
+    // This.rnnoiseModule = null
 }
 
 
