@@ -13,3 +13,4 @@
    
         - [rnnoise-demo](https://raw.githack.com/Meshiest/rnnoise-demo/master/index.html)(可能需要翻墻)，代碼地址在：https://github.com/Meshiest /rnnoise-demo
        
+        - [来自原文rnnoise](https://he-juan.github.io/RNN/)
